@@ -17,15 +17,15 @@ import java.util.HashMap;
 
 public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
-    HashMap<Integer, Player> players;
-    HashMap<String, BattleShipsPluginClient> clients;
-    Game grid;
+    private HashMap<Integer, Player> players;
+    private HashMap<String, BattleShipsPluginClient> clients;
+    private Game game;
 
     @Override
     public void onEnable() {
         players = new HashMap<>();
         clients = new HashMap<>();
-        grid = new Game(this);
+        game = new Game(this);
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -41,11 +41,17 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
         if (!clients.containsKey(username)) {
             client = new BattleShipsPluginClient(username, this);
             clients.put(username, client);
+
+            // Determine the location for the arena.
+            Location location = new Location(player.getWorld(), 0.5 - clients.size() * 30, 100, 0.5, 0, 0);
+            client.setLocation(location);
+
             exception = "&7We are attempting to connect you to the BattleShips server.\nTry &creconnecting &7in a few seconds.";
         } else {
             client = clients.get(username);
             players.put(client.getId(), player);
             client.reconnect(username);
+
             exception = "&cUnable to connect.\nIs there a BattleShips server running on port &455555&c?";
         }
 
@@ -68,15 +74,11 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
             event.setJoinMessage(null);
         }
 
-        // Determine the location for the arena.
-        Location location = new Location(player.getWorld(), 0.5 - clients.size() * 30, 100, 0.5, 0, 0);
-
         // Create arena.
-        createArena(player, location);
+        createArena(player, client.getLocation());
 
         // Teleport player to the arena.
-        player.teleport(location);
-        client.setLocation(location);
+        player.teleport(client.getLocation());
     }
 
     @EventHandler
@@ -97,6 +99,9 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Block block = player.getTargetBlockExact(100, FluidCollisionMode.NEVER);
+
+        // Ignore interact if it isn't the player's turn.
+        if (game.getTurn() != getClient(player).getId()) return;
 
         int x = (int) Math.abs(block.getX() - 13 - player.getLocation().getX());
         int y = (int) Math.abs(block.getY() - 19 - player.getLocation().getY());
@@ -154,7 +159,7 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
                 if (i != dy && j != lx && i != uy && j != rx) {
                     Location front = new Location(world, j, i , fz);
-                    Material material = grid.getMaterial((int) (j + 12 - location.getX()), (int) (i + 6 - location.getY()), getClient(player).getId());
+                    Material material = game.getMaterial((int) (j + 12 - location.getX()), (int) (i + 6 - location.getY()), getClient(player).getId());
                     world.getBlockAt(front).setType(material);
                 }
             }
@@ -182,6 +187,16 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
     public ArrayList<BattleShipsPluginClient> getClients() {
         return new ArrayList<>(clients.values());
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void resetGame() {
+        this.game = new Game(this);
+        this.clients.clear();
+        this.players.clear();
     }
 
 }

@@ -10,11 +10,13 @@ import org.bukkit.Material;
 public class Game {
 
     private BattleShipsPlugin plugin;
-    private int[][] grid = new int[25][25];
+    private int[][] grid;
     private int turn;
 
     public Game(BattleShipsPlugin plugin) {
         this.plugin = plugin;
+        this.grid = new int[25][25];
+        this.turn = 0;
     }
 
     public GridState getGridState(int x, int y, int id) {
@@ -85,6 +87,10 @@ public class Game {
         };
 
         Bukkit.getScheduler().runTask(plugin, runnable);
+    }
+
+    public int getTurn() {
+        return turn;
     }
 
     public void setTurn(int id) {

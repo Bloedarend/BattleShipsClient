@@ -10,7 +10,7 @@ import org.bukkit.Location;
 public class BattleShipsPluginClient extends BattleShipsClient {
 
     private BattleShipsPlugin plugin;
-    private Game grid;
+    private Game game;
     private boolean serverIsOnline;
     private int id;
     private Location location;
@@ -19,14 +19,14 @@ public class BattleShipsPluginClient extends BattleShipsClient {
         super(username);
 
         this.plugin = plugin;
-        grid = plugin.grid;
+        game = plugin.getGame();
         serverIsOnline = false;
     }
 
     @Override
     protected void onPos(int x, int y) {
-        grid.updateGrid(x, y, id, GridState.ALLY);
-        grid.updateBlock(x, y, this);
+        game.updateGrid(x, y, id, GridState.ALLY);
+        game.updateBlock(x, y, this);
     }
 
     @Override
@@ -39,20 +39,30 @@ public class BattleShipsPluginClient extends BattleShipsClient {
     }
 
     @Override
-    protected void onTurn(int playerNumber) {
+    public void onWinner(int id) {
+        Runnable runnable = () -> {
+            String message = id == this.id ? "&7You have &cwon &7the game!" : "&7You have &clost &7the game!";
 
+            plugin.getPlayer(this.getId()).kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
+            plugin.resetGame();
+        };
+    }
+
+    @Override
+    protected void onTurn(int playerNumber) {
+        game.setTurn(playerNumber);
     }
 
     @Override
     protected void onMiss(int x, int y) {
-        grid.updateGrid(x, y, id, GridState.MISS);
-        grid.updateBlock(x, y, this);
+        game.updateGrid(x, y, id, GridState.MISS);
+        game.updateBlock(x, y, this);
     }
 
     @Override
     protected void onHit(int x, int y, int playerNumber) {
-        grid.updateGrid(x, y, playerNumber, GridState.ENEMY);
-        grid.updateBlock(x, y, this);
+        game.updateGrid(x, y, playerNumber, GridState.ENEMY);
+        game.updateBlock(x, y, this);
     }
 
     @Override
