@@ -3,8 +3,11 @@ package nl.gerwint.plugin.models;
 import nl.gerwint.plugin.BattleShipsPlugin;
 import nl.gerwint.plugin.BattleShipsPluginClient;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 
 
 public class Game {
@@ -19,22 +22,12 @@ public class Game {
         this.turn = 0;
     }
 
-    public GridState getGridState(int x, int y, int id) {
-        int value = grid[x][y];
+    public boolean canHit(int x, int y, int id) {
+        Player player = plugin.getPlayer(id);
+        Location location = new Location(player.getWorld(), player.getLocation().getX() - x + 12, player.getLocation().getY() - y + 18, player.getLocation().getZ() + 21);
+        Material material = location.getWorld().getBlockAt(location).getType();
 
-        if (value == -1) {
-            return GridState.MISS;
-        }
-
-        if (value == 0) {
-            return GridState.UNKNOWN;
-        }
-
-        if (value == id) {
-            return GridState.ALLY;
-        }
-
-        return GridState.ENEMY;
+        return material == Material.BLACK_WOOL || material == Material.GRAY_WOOL;
     }
 
     public Material getMaterial(int x, int y, int id) {
@@ -64,7 +57,7 @@ public class Game {
         }
     }
 
-    public void updateGrid(int x, int y, int id, GridState state) {
+    public void updateGrid(int x, int y, int id, int idHit, GridState state) {
         // Update the board.
         if (state == GridState.MISS) {
             grid[x][y] = -1;
@@ -73,7 +66,12 @@ public class Game {
         } else if (state == GridState.ALLY) {
             grid[x][y] = id;
         } else if (state == GridState.ENEMY) {
-            grid[x][y] = id;
+            grid[x][y] = idHit;
+
+            if (idHit == id) {
+                plugin.getClient(plugin.getPlayer(id)).isHit = true;
+                plugin.getPlayer(id).sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &cYou have been hit!"));
+            }
         }
     }
 
@@ -81,6 +79,11 @@ public class Game {
         Runnable runnable = () -> {
             Location location = client.getLocation();
             Material material = getMaterial(x, y, client.getId());
+
+            if (client.isHit) {
+                client.isHit = false;
+                material = Material.YELLOW_WOOL;
+            }
 
             Location block = new Location(location.getWorld(), location.getX() - x + 12, location.getY() - y + 18, location.getZ() + 21);
             location.getWorld().getBlockAt(block).setType(material);

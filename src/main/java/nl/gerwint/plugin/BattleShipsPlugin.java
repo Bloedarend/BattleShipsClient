@@ -26,12 +26,20 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
     private HashMap<Integer, Player> players;
     private HashMap<String, BattleShipsPluginClient> clients;
     private Game game;
+    private String host;
+    private int port;
 
     @Override
     public void onEnable() {
-        players = new HashMap<>();
-        clients = new HashMap<>();
-        game = new Game(this);
+        this.players = new HashMap<>();
+        this.clients = new HashMap<>();
+        this.game = new Game(this);
+
+
+        this.saveDefaultConfig();
+        this.host = this.getConfig().getString("host");
+        this.port = this.getConfig().getInt("port");
+
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -43,9 +51,9 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
         String exception;
 
-        // Register the player to the server on port 55555.
+        // Register the player to the server.
         if (!clients.containsKey(username)) {
-            client = new BattleShipsPluginClient(username, this);
+            client = new BattleShipsPluginClient(host, port, username, this);
             clients.put(username, client);
 
             // Determine the location for the arena.
@@ -56,9 +64,8 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
         } else {
             client = clients.get(username);
             players.put(client.getId(), player);
-            client.reconnect(username);
 
-            exception = "&cUnable to connect.\nIs there a BattleShips server running on port &455555&c?";
+            exception = "&cUnable to connect.\nIs there a BattleShips server running on &4" + host + ":" + port + "&c?";
         }
 
         // Make sure a connection has been made.
@@ -109,16 +116,24 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         Block block = player.getTargetBlockExact(100, FluidCollisionMode.NEVER);
 
-        // Ignore interact if it isn't the player's turn.
-        if (game.getTurn() != getClient(player).getId()) return;
-
         int x = (int) Math.abs(block.getX() - 13 - player.getLocation().getX());
         int y = (int) Math.abs(block.getY() - 19 - player.getLocation().getY());
 
-        getClient(player).launchTorpedo(x, y);
+        // Ignore interact if it isn't the player's turn.
+        if (game.getTurn() != getClient(player).getId()) return;
 
-        player.sendMessage("" + x);
-        player.sendMessage("" + y);
+        // Make sure the player cannot shoot themselves.
+        if (block.getBlockData().getMaterial() == Material.LIGHT_BLUE_WOOL || block.getBlockData().getMaterial() == Material.YELLOW_WOOL) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &cYou cannot shoot your own &cships!"));
+            return;
+        }
+
+        if (!game.canHit(x - 1, y - 1, getClient(player).getId())) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &cThis tile has already been hit. Try another one!"));
+            return;
+        }
+
+        getClient(player).launchTorpedo(x - 1, y - 1);
     }
 
     @EventHandler
@@ -228,8 +243,13 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
     public void resetGame() {
         this.game = new Game(this);
-        this.clients.clear();
-        this.players.clear();
+    }
+
+    public void removePlayer(int id) {
+        Player player = getPlayer(id);
+
+        this.clients.remove(player.getName());
+        this.players.remove(id);
     }
 
 }

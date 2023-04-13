@@ -15,24 +15,27 @@ public class BattleShipsPluginClient extends BattleShipsClient {
     private int id;
     private Location location;
 
-    public BattleShipsPluginClient(String username, BattleShipsPlugin plugin) {
-        super(username);
+    public boolean isHit;
 
+    public BattleShipsPluginClient(String host, int port, String username, BattleShipsPlugin plugin) {
+        super(host, port, username);
+
+        this.isHit = false;
         this.plugin = plugin;
-        game = plugin.getGame();
-        serverIsOnline = false;
+        this.game = plugin.getGame();
+        this.serverIsOnline = false;
     }
 
     @Override
     protected void onPos(int x, int y) {
-        game.updateGrid(x, y, id, GridState.ALLY);
+        game.updateGrid(x, y, id, id, GridState.ALLY);
         game.updateBlock(x, y, this);
     }
 
     @Override
     protected void onNewGame(int x, int y) {
         Runnable runnable = () -> {
-            Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &cThe game has begun!"));
+            plugin.getPlayer(id).sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &cThe game has begun!"));
         };
 
         Bukkit.getScheduler().runTask(plugin, runnable);
@@ -43,7 +46,8 @@ public class BattleShipsPluginClient extends BattleShipsClient {
         Runnable runnable = () -> {
             String message = id == this.id ? "&7You have &cwon &7the game!" : "&7You have &clost &7the game!";
 
-            plugin.getPlayer(this.getId()).kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
+            plugin.getPlayer(this.id).kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
+            plugin.removePlayer(this.id);
             plugin.resetGame();
         };
 
@@ -52,6 +56,9 @@ public class BattleShipsPluginClient extends BattleShipsClient {
 
     @Override
     protected void onTurn(int playerNumber) {
+        game.setTurn(playerNumber);
+
+        System.out.println("turn: " + playerNumber + ", id:" + getId());
         Runnable runnable = () -> {
             if (id == playerNumber) {
                 plugin.getPlayer(id).sendTitle(ChatColor.translateAlternateColorCodes('&', "&4&lBATTLESHIPS"), ChatColor.translateAlternateColorCodes('&', "&7It is &cyour &7turn to make a move!"), 5, 40, 5);
@@ -60,18 +67,21 @@ public class BattleShipsPluginClient extends BattleShipsClient {
 
         Bukkit.getScheduler().runTask(plugin, runnable);
 
-        game.setTurn(playerNumber);
     }
 
     @Override
     protected void onMiss(int x, int y) {
-        game.updateGrid(x, y, id, GridState.MISS);
+        game.updateGrid(x, y, id, id, GridState.MISS);
         game.updateBlock(x, y, this);
     }
 
     @Override
     protected void onHit(int x, int y, int playerNumber) {
-        game.updateGrid(x, y, playerNumber, GridState.ENEMY);
+        String player = plugin.getPlayer(playerNumber) != null ? plugin.getPlayer(playerNumber).getName() : "" + playerNumber;
+
+        plugin.getPlayer(id).sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&4&lBATTLESHIPS&8] &4" + player + " &chas been hit!"));
+
+        game.updateGrid(x, y, id, playerNumber, GridState.ENEMY);
         game.updateBlock(x, y, this);
     }
 
