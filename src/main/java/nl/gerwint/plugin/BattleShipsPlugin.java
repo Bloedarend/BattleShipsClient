@@ -3,6 +3,10 @@ package nl.gerwint.plugin;
 import nl.gerwint.plugin.models.Game;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Stairs;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -175,6 +179,22 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
             }
         }
 
+        // Build the platform.
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                Location platform = new Location(world, mx + i, my - 1, mz + j);
+                Location border = new Location(world, mx + i, my, mz + j);
+
+                world.getBlockAt(platform).setType(Material.STONE_BRICKS);
+
+                if (!(i == 0 && j == 0)) {
+                    world.getBlockAt(border).setType(Material.STONE_BRICKS);
+                }
+            }
+        }
+
+        Location roof = new Location(world, mx, my + 2, mz);
+        world.getBlockAt(roof).setType(Material.STONE_BRICKS);
     }
 
     public Player getPlayer(int id) {
@@ -183,10 +203,6 @@ public class BattleShipsPlugin extends JavaPlugin implements Listener {
 
     public BattleShipsPluginClient getClient(Player player) {
         return clients.get(player.getName());
-    }
-
-    public ArrayList<BattleShipsPluginClient> getClients() {
-        return new ArrayList<>(clients.values());
     }
 
     public Game getGame() {
