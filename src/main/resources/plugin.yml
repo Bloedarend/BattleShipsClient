@@ -1,0 +1,4 @@
+name: BattleShipsPlugin
+version: '${project.version}'
+main: nl.gerwint.plugin.BattleShipsPlugin
+api-version: 1.19
