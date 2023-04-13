@@ -46,10 +46,20 @@ public class BattleShipsPluginClient extends BattleShipsClient {
             plugin.getPlayer(this.getId()).kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
             plugin.resetGame();
         };
+
+        Bukkit.getScheduler().runTask(plugin, runnable);
     }
 
     @Override
     protected void onTurn(int playerNumber) {
+        Runnable runnable = () -> {
+            if (id == playerNumber) {
+                plugin.getPlayer(id).sendTitle(ChatColor.translateAlternateColorCodes('&', "&4&lBATTLESHIPS"), ChatColor.translateAlternateColorCodes('&', "&7It is &cyour &7turn to make a move!"), 5, 40, 5);
+            }
+        };
+
+        Bukkit.getScheduler().runTask(plugin, runnable);
+
         game.setTurn(playerNumber);
     }
 
