@@ -11,7 +11,7 @@ import java.net.UnknownHostException;
 @SuppressWarnings({"EmptyMethod", "unused"})
 public abstract class BattleShipsClient {
 
-    private static Client client;
+    private Client client;
 
     /**
      * Instantiates a new BattleShipsClient.
@@ -72,6 +72,7 @@ public abstract class BattleShipsClient {
      * @see Client#sendMessage(String)
      */
     public void sendCommand(String message) {
+        Bukkit.getConsoleSender().sendMessage("Out: " + message);
         if (!client.sendMessage(message)) {
             System.out.println("ERROR:" + " Something went wrong while sending your message");
         }
@@ -112,7 +113,7 @@ public abstract class BattleShipsClient {
             case PONG -> onPong();
         }
 
-        Bukkit.getConsoleSender().sendMessage(message);
+        Bukkit.getConsoleSender().sendMessage("In: "+ message);
     }
 
     /**
