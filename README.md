@@ -1,33 +1,19 @@
 # BattleShipsClient
-Go to [BattleShips](https://github.com/AppleSaph/BattleShips) to find the server. 
+This is a reference client for the [BattleShipsClient](https://github.com/gerwintrip/BattleShipsClient) that connects to the [BattleShips](https://github.com/AppleSaph/BattleShips) server. Both of those projects were made as an extra assignment for school and to showcase what is possible with the BattleShipClient, I decided to make a Minecraft implementation of it. 
 
-This is a client for the Battleships game.
+This project was made by forking the client repository, which is not the intended way to make a client implementation. The correct way to do this is to download the client as a jar file and to add it as a module dependency to your project. Since we haven't heard back from our lecturer about the extra assignment, I have not taken the time to remake and improve this project.
 
-## How to run
-1. Download the latest release
-2. Add release as module dependency in project
-3. Make new MyBattleShipsClient class that extends from BattleShipsClient
-4. Implement abstract methods.
+## Installtion
+1. Set up the BattleShips server. See instructions for that [here](https://github.com/AppleSaph/BattleShips#installation).
+2. Set up a Spigot Minecraft server locally. Find more about that [here](https://www.spigotmc.org/wiki/spigot-installation).
+3. Compile this project using Maven.
+4. Move the compiled jar into the plugins directory of your Spigot Minecraft server.
+5. Start the server.
+6. Edit the config file. Put in the host of the BattleShips server and the port that it is running on.
+7. Restart the server.
 
-## Server Protocol
-Communication between the client and the server is done using the following protocol:
-
-### Client -> Server
-* `MOVE~x~y` - where x and y are the coordinates of the move
-* `EXIT` - to exit the game
-* `PING` - to check if the server is still alive
-* `PONG` - response to a PING from the server
-
-### Server -> Client
-* `HELLO~playerNumber` - where playerNumber is the playerNumber of the player
-* `HIT~x~y~playerNumber` - where x and y are the coordinates of the hit, and playerNumber is the playerNumber of the player that is hit
-* `MISS~x~y` - where x and y are the coordinates of the miss
-* `WINNER~playerNumber` - where playerNumber is the playerNumber of the winner
-* `LOST~playerNumber` - where playerNumber is the playerNumber of the player who lost
-* `ERROR~message` - where message is the error message
-* `EXIT` - to exit the game
-* `TURN~playerNumber` - where playerNumber is the playerNumber of the player whose turn it is
-* `NEWGAME~x~y` - where x and y are the width and height of the new game
-* `POS~x~y` - where x and y are the coordinates of a ship part
-* `PING` - to check if a client is still alive
-* `PONG` - response to a PING from the client
+## How to play
+1. Join the Minecraft server. (do not leave the server, it will break 😔)
+2. Wait for the host to start the game.
+3. Click on blocks to start guessing tiles.
+4. That's it. Now repeat step 3 until someone has won.
